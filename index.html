@@ -29,7 +29,20 @@ main{height:calc(100vh - 52px);padding:8px 10px 10px}
 .memory-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1.28fr) minmax(0,.72fr);gap:7px;min-height:0}.device-card{display:grid;grid-template-columns:1.12fr .88fr;gap:8px;min-height:0}.device-figure{width:100%;height:100%;max-height:270px;object-fit:contain;border:1px solid #d4e1e9;border-radius:7px;background:#fbfdff}.principle{background:#f3f8fc;border-left:4px solid var(--blue)}.principle p{line-height:1.22}.legacy-page{display:none}
 .memory-detail-grid{display:grid;grid-template-columns:1.38fr 1fr 1.08fr;gap:7px;min-height:0}.memory-detail-grid>.col{min-width:0}.memory-hero-figure{width:100%;height:310px;object-fit:contain;border:1px solid #d4e1e9;border-radius:7px;background:#fbfdff}.memory-detail-grid .card p{line-height:1.22}
 .qa-shell{display:grid;grid-template-rows:auto minmax(0,1fr);gap:5px;min-height:0}.qa-module-bar{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px}.qa-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:5px;min-height:0}.qa-card{background:#fff;border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:8px;padding:6px 7px;overflow:hidden;box-shadow:0 1px 3px #183b5b12}.qa-card h2{margin:0 0 3px;color:var(--navy);font-size:1.04em;line-height:1.16;border-bottom:1px solid #d7e3eb;padding-bottom:2px}.qa-card p{margin:0;line-height:1.2;text-align:justify}.qa-card .num{display:inline-flex;align-items:center;justify-content:center;min-width:1.55em;height:1.55em;margin-right:4px;border-radius:50%;background:var(--blue);color:#fff;font-weight:800}.qa-card.tip{border-left-color:var(--ok);background:#eff8f4}.qa-card.tip h2{color:var(--ok)}
-@media(max-width:1100px){nav{height:46px;padding:5px 8px}.brand .sub,.hint{display:none}main{height:calc(100vh - 46px);padding:5px}.cols{gap:4px}.card{padding:5px 6px;border-radius:6px}.hero{padding:5px 8px}.hero h1{font-size:1.35em}}
+@media(max-width:1100px){
+html,body{height:auto;min-height:100%;overflow:auto;overscroll-behavior:auto}
+body{font-size:14px}
+nav{position:sticky;top:0;z-index:100;height:auto;min-height:46px;padding:5px 8px;overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:thin;touch-action:pan-x}
+nav .brand,nav button{flex:0 0 auto}nav .brand{font-size:1em}nav button{white-space:nowrap}.brand .sub,.hint{display:none}
+main{height:auto;min-height:calc(100vh - 46px);padding:5px;overflow:visible;touch-action:pan-y}
+.page,.page.active{height:auto;min-height:0;grid-template-rows:auto auto}
+.hero{grid-template-columns:1fr;align-items:start;padding:8px}.hero h1{font-size:1.35em}.role{text-align:left;margin-top:4px;white-space:normal}
+.cols,.memory-detail-grid,.device-card{grid-template-columns:1fr;gap:6px}.col{gap:6px}.card{padding:7px 8px;border-radius:7px;overflow:visible}
+.process-grid,.qa-grid{grid-template-columns:1fr;grid-template-rows:none;gap:6px}.process-card,.qa-card{overflow:visible}
+.memory-grid{grid-template-columns:1fr;grid-template-rows:none}.qa-shell{grid-template-rows:auto auto}
+.qa-module-bar{display:flex;overflow-x:auto;gap:4px;padding-bottom:2px;-webkit-overflow-scrolling:touch;touch-action:pan-x}.qa-module{flex:0 0 auto;white-space:nowrap}
+.device-figure,.memory-hero-figure{height:auto;max-height:none}
+}
 @media print{@page{size:A4 landscape;margin:7mm}html,body{height:auto;overflow:visible;background:#fff;font-size:7.5pt}nav{display:none}main{height:auto;padding:0}.page,.page.active{display:grid;height:196mm;page-break-after:always;margin:0}.page:last-child{page-break-after:auto}.cols{gap:4px}.card{box-shadow:none;padding:5px}.hero{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
 </style>
 </head>
@@ -919,9 +932,13 @@ renderQA(0);
 const tabs=[...document.querySelectorAll('.tab')];
 const pages=[...document.querySelectorAll('.page')];
 let current=0;
-function show(i){current=(i+pages.length)%pages.length;pages.forEach((p,n)=>p.classList.toggle('active',n===current));tabs.forEach((b,n)=>b.classList.toggle('active',n===current));}
+function show(i){current=(i+pages.length)%pages.length;pages.forEach((p,n)=>p.classList.toggle('active',n===current));tabs.forEach((b,n)=>b.classList.toggle('active',n===current));if(window.matchMedia('(max-width:1100px)').matches)window.scrollTo({top:0,behavior:'smooth'});}
 tabs.forEach((b,i)=>b.addEventListener('click',()=>show(i)));
 document.addEventListener('keydown',e=>{const keyMap={'1':0,'2':2,'3':3,'4':4,'5':5,'6':6,'7':1,'8':7};if(e.key in keyMap)show(keyMap[e.key]);if(e.key==='ArrowRight')show(current+1);if(e.key==='ArrowLeft')show(current-1);});
+let touchX=0,touchY=0;
+const mainArea=document.querySelector('main');
+mainArea.addEventListener('touchstart',e=>{if(e.touches.length!==1)return;touchX=e.touches[0].clientX;touchY=e.touches[0].clientY;},{passive:true});
+mainArea.addEventListener('touchend',e=>{if(!e.changedTouches.length)return;const dx=e.changedTouches[0].clientX-touchX;const dy=e.changedTouches[0].clientY-touchY;if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)*1.25)show(current+(dx<0?1:-1));},{passive:true});
 </script>
 </body>
 </html>
